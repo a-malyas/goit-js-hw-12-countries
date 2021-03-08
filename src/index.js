@@ -6,7 +6,7 @@ import 'lodash.debounce';
 import oneCountryTpl from './1_country_template.hbs';
 import countryListTpl from './countries_template.hbs';
 import debounce from 'lodash.debounce';
-import { defaults } from '@pnotify/core';
+import { defaults, error } from '@pnotify/core';
 import '@pnotify/core/dist/BrightTheme.css';
 defaults.styling = 'brighttheme';
 defaults.icons = 'brighttheme';
@@ -20,27 +20,26 @@ searchForm.addEventListener('input', debounce(onSearch, 500));
 
 function onSearch(e) {
     e.preventDefault();
-    clearCountryList();
     const searchQuery = e.target.value;
-
+    clearCountryList();
+    
     fetchCountries(searchQuery).then(data => {
-        if (data.lenght >= 10) {
-            console.log(data.lenght);
+        if (data.length >= 10) {
             error({
-                text: "Too many matches found. Please enter a more specific query!"
+                text: "Too many matches found. Please enter a more specific query!",
+                delay: 2000,
             });
-        } else if (data.lenght === 1) {
-            console.log(data.lenght);
+        } else if (data.status === 404) {
+            error({
+                text: "No country has been found. Please enter a more specific query!"
+        });
+        } else if (data.length === 1) {
             renderOneCountryCard(data);
-        } else if (data.lenght < 10) {
-            console.log(data.lenght);
+        } else if (data.length < 10) {
             renderCountriesList(data);
         }
     })
-    .catch(error => {
-        console.log(error);
-    });
-    
+    .catch(console.log);
 }
         
 
