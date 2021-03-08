@@ -39,7 +39,7 @@ function onSearch(e) {
             renderCountriesList(data);
         }
     })
-    .catch(console.log);
+    .catch(error => console.log(error));
 }
         
 
