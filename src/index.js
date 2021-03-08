@@ -1,16 +1,20 @@
-import countryCardTpl from './template.hbs';
+import fetchCountries from './fetchCountries.js';
 import './styles.css';
-import '../node_modules/@pnotify/core/dist/PNotify.css';
-import '../node_modules/@pnotify/mobile/dist/PNotifyMobile.css';
+import { defaultModules } from '@pnotify/core/dist/PNotify.js';
+import * as PNotifyMobile from '@pnotify/mobile/dist/PNotifyMobile.js';
 import 'lodash.debounce';
+import oneCountryTpl from './1_country_template.hbs';
+import countryListTpl from './countries_template.hbs';
 import debounce from 'lodash.debounce';
-import { template } from 'handlebars';
+import { defaults } from '@pnotify/core';
 import '@pnotify/core/dist/BrightTheme.css';
-const { error } = require('@pnotify/core');
+defaults.styling = 'brighttheme';
+defaults.icons = 'brighttheme';
+
+defaultModules.set(PNotifyMobile, {});
 
 const searchForm = document.querySelector('.js-search-form');
 const countryListRef = document.querySelector('.js-countryList');
-// const searchInput = document.querySelector('input-js');
 
 searchForm.addEventListener('input', debounce(onSearch, 500));
 
@@ -19,25 +23,38 @@ function onSearch(e) {
     clearCountryList();
     const searchQuery = e.target.value;
 
-    fetchCountryByName(searchQuery)
-        .then(renderCountryCard)
-        .catch(error => {
-            console.log(error);
-        })
-}
-
-function fetchCountryByName(name) {
-    return fetch(`https://restcountries.eu/rest/v2/name/${name}`).then(response => {
-        return response.json();
+    fetchCountries(searchQuery).then(data => {
+        if (data.lenght >= 10) {
+            console.log(data.lenght);
+            error({
+                text: "Too many matches found. Please enter a more specific query!"
+            });
+        } else if (data.lenght === 1) {
+            console.log(data.lenght);
+            renderOneCountryCard(data);
+        } else if (data.lenght < 10) {
+            console.log(data.lenght);
+            renderCountriesList(data);
+        }
+    })
+    .catch(error => {
+        console.log(error);
     });
+    
+}
+        
+
+function renderCountriesList(countries) {
+    const markup = countryListTpl(countries);
+    console.log(markup);
+    countryListRef.insertAdjacentHTML('afterbegin', markup);
 }
 
-function renderCountryCard(country) {
-    const markup = countryCardTpl(country);
+function renderOneCountryCard([country]) {
+    const markup = oneCountryTpl(country);
     console.log(markup);
     countryListRef.innerHTML = markup;
 }
-
 
 function clearCountryList() {
   countryListRef.innerHTML = '';
